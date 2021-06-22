@@ -1,5 +1,5 @@
 vrrp_script check_httpd {
-  script "killall -0 httpd"
+  script "/usr/bin/systemctl status httpd"
   interval 2
   weight 2
 }

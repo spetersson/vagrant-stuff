@@ -1,13 +1,3 @@
-# Vagrant.configure("2") do |config|
-#   (1..4).each do |i|
-#     config.vm.define "keepalived-00{i}" do |node|
-#       node.vm.box = "centos/7"
-#       node.vm.hostname = "keepalived-00{i}"
-#       node.vm.network "private_network", ip: "10.1.0.2{i}", virtualbox__intnet: "keepalived"
-#     end
-#   end
-# end
-
 VAGRANTFILE_API_VERSION = "2"
 
 cluster = {
