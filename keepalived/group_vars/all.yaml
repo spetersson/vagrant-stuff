@@ -1,0 +1,4 @@
+keepalived_vip: 192.168.33.10
+keepalived_interface: eth1
+keepalived_pass: asdqwe123
+keepalived_router_id: 61

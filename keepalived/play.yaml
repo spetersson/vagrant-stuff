@@ -1,0 +1,50 @@
+---
+- hosts: all
+  become: True
+  gather_facts: True
+  pre_tasks:
+    - name: Disable SELinux
+      selinux:
+        state: permissive
+        policy: targeted
+
+  tasks:
+    - name: Install packages httpd, keepalived, vim, psmisc
+      package:
+        name:
+          - httpd
+          - keepalived
+          - psmisc
+          - vim
+        state: present
+      notify:
+        - start httpd
+        - start keepalived
+
+    - name: generate keepalived configuration
+      template:
+        src: keepalived.conf.j2
+        dest: /etc/keepalived/keepalived.conf
+        mode: 0644
+        owner: root
+        group: root
+      notify:
+        - restart keepalived
+
+  handlers:
+    - name: start httpd
+      service:
+        name: httpd
+        state: started
+        enabled: True
+
+    - name: start keepalived
+      service:
+        name: keepalived
+        state: started
+        enabled: True
+
+    - name: restart keepalived
+      service:
+        name: keepalived
+        state: restarted
