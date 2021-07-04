@@ -1,0 +1,72 @@
+---
+- hosts: all
+  become: True
+  gather_facts: True
+  pre_tasks:
+    - name: Generate pacman mirrorlist
+      template:
+        src: etc/pacman.d/mirrorlist.j2
+        dest: /etc/pacman.d/mirrorlist
+
+    - name: Update pacman cache
+      pacman:
+        update_cache: True
+
+    - name: Upgrade pacman packages
+      pacman:
+        upgrade: True
+
+    - name: Pacman clean packages
+      pacman:
+        name: virtualbox-guest-utils-nox
+        state: absent
+
+    - name: Create wheel group if it does not exist
+      group:
+        name: wheel
+        state: present
+
+    - name: allow wheel to passwordless sudo
+      lineinfile:
+        dest: /etc/sudoers
+        state: present
+        regexp: '^%wheel'
+        line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+        validate: 'visudo -cf %s'
+
+  tasks:
+    - name: Install packages
+      package:
+        name:
+          - gnome
+          - gnome-extra
+          - htop
+          - vim
+          - firefox
+          - git
+          - base-devel
+          - atom
+        state: present
+
+    - name: Install virtualbox guest utils
+      pacman:
+        name:
+          - virtualbox-guest-utils
+        state: present
+      notify: reboot guest
+
+    - name: Enable GDM
+      service:
+        name: gdm
+        enabled: True
+
+    - name: Add user arch
+      user:
+        name: arch
+        group: wheel
+        state: present
+
+  handlers:
+    - name: reboot guest
+      reboot:
+        reboot_timeout: 5
