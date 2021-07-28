@@ -1,0 +1,4 @@
+ipaadmin_password: Asdqwe123!
+ipadm_password: Asdqwe123!
+ipaserver_domain: test.local
+ipaserver_realm: TEST.LOCAL

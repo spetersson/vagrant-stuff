@@ -1,0 +1,37 @@
+---
+- hosts: all
+  become: True
+  gather_facts: True
+  pre_tasks:
+    - name: set system ip address in hosts file
+      lineinfile:
+        path: /etc/hosts
+        regexp: '^127\.0\.1\.1'
+        line: "{{ ansible_eth1.ipv4.address }} {{ ansible_fqdn }} {{ ansible_hostname }}"
+
+    - name: set ipa master in hosts file
+      lineinfile:
+        path: /etc/hosts
+        regexp: '^192\.168\.33\.11'
+        line: "192.168.33.11 ipa-master-001.test.local ipa-master-001"
+      when: inventory_hostname in groups['ipareplicas']
+
+    - name: set ipa master as nameserver
+      nmcli:
+        conn_name: eth0
+        type: ethernet
+        dns4:
+          - 192.168.33.11
+        state: present
+      when: inventory_hostname in groups['ipareplicas']
+
+    - name: reload NetworkManager
+      service:
+        name: NetworkManager
+        state: reloaded
+      when: inventory_hostname in groups['ipareplicas']
+
+  roles:
+    - { role: freeipa.ansible_freeipa.ipaserver, when: ('ipaserver' in group_names) }
+    - { role: freeipa.ansible_freeipa.ipareplica, when: ('ipareplicas' in group_names) }
+    #  - { role: freeipa.ansible_freeipa.ipaclient, when: ('ipaclients', in group_names) }

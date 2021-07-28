@@ -1,0 +1,47 @@
+VAGRANTFILE_API_VERSION = "2"
+
+ipaservers = {
+  "ipa-master-001.test.local" => { :ip => "192.168.33.11", :cpus => 4, :mem => 4096 },
+  "ipa-master-002.test.local" => { :ip => "192.168.33.12", :cpus => 4, :mem => 4096 }
+}
+
+clients = {
+  "ipa-client-001.test.local" => { :ip => "192.168.33.21", :cpus => 2, :mem => 2048 }
+}
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+
+  ipaservers.each_with_index do |(hostname, info), index|
+    config.vm.define hostname do |cfg|
+      cfg.vm.provider :virtualbox do |vb, override|
+        config.vm.box = "centos/7"
+        override.vm.network :private_network, ip: "#{info[:ip]}"
+        override.vm.hostname = hostname
+        vb.name = hostname
+        vb.customize ["modifyvm", :id, "--memory", info[:mem], "--cpus", info[:cpus], "--hwvirtex", "on"]
+      end
+    end
+  end
+
+  clients.each_with_index do |(hostname, info), index|
+    config.vm.define hostname do |cfg|
+      cfg.vm.provider :virtualbox do |vb, override|
+        config.vm.box = "centos/8"
+        override.vm.hostname = hostname
+        override.vm.network :private_network, ip: "#{info[:ip]}"
+        vb.name = hostname
+        vb.customize ["modifyvm", :id, "--memory", info[:mem], "--cpus", info[:cpus], "--hwvirtex", "on"]
+      end
+    end
+  end
+
+  config.vm.provision :ansible do |ansible|
+    ansible.playbook = "play.yaml"
+    #ansible.verbose = "vvv"
+    ansible.groups = {
+      "ipaserver" => ["ipa-master-001.test.local"],
+      "ipareplicas" => ["ipa-master-002.test.local"],
+      #"ipaclients" => ["ipa-client-001.test.local"]
+    }
+  end
+end
